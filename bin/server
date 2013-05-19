@@ -1,0 +1,69 @@
+#!/usr/bin/env node
+"use strict"
+
+var http = require('http')
+var shoe = require('shoe')
+var request = require('superagent')
+var through = require('through')
+var trumpet = require('trumpet');
+var exec = require('child_process').exec
+var log = require('debug')('driver-install')
+var cheerio = require('cheerio')
+var ecstatic = require('ecstatic')
+var rpc = require('rpc-stream')
+var ansi = require('ansi-html-stream')
+var JSONStream = require('json-stream')
+var docs = {}
+var executable = __dirname + '/../node_modules/utilities-beagle/bin/ninja_install -g'
+var app = http.createServer(ecstatic(__dirname + '/../public'))
+app.listen(9099)
+
+var MuxDemux = require('mux-demux')
+
+var sock = shoe(function (stream) {
+  log('new connection')
+  var mx = MuxDemux()
+
+  request
+  .get('https://gist.github.com/weilu/8eed5843ab350b004505/raw/eb689fb68438ecaa43b58904f7a337a80761d143/ninja_blocks_drivers.json')
+  .end(function(err, res) {
+    if (err) return console.error(err)
+    var drivers = mx.createStream('drivers')
+    var obj = JSON.parse(res.text)
+    obj.forEach(function(driver) {
+      drivers.write(driver)
+    })
+  })
+
+  var rpcStream = mx.createStream('rpc')
+  var server = rpc({
+    install: function(name, cb) {
+      log('installing', name)
+      var logStream = mx.createStream('log')
+      log('executing: ', executable + ' ' + name)
+
+      var installation = exec(executable + ' ' + name)
+      installation.on('error', function(err) {
+        console.error(err)
+        cb(err.toString())
+      })
+
+      installation.stdout.pipe(ansi()).pipe(logStream)
+      installation.stderr.pipe(ansi()).pipe(logStream)
+
+      installation.on('close', function(code) {
+        if (code !== 0) {
+          log('Installation Failed', name)
+          return cb(new Error('Installation failed!'))
+        }
+        log('Installation Success!')
+        return cb(null, 'Installation Success!')
+      })
+    }
+  })
+
+  mx.pipe(stream).pipe(mx)
+  rpcStream.pipe(server).pipe(rpcStream)
+})
+
+sock.install(app, '/driver-install')
