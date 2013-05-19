@@ -17,9 +17,9 @@ mx.pipe(stream).pipe(mx)
 function log(msg) {
   if (msg.message) msg = msg.message
   var result = document.getElementById('console');
-  var div = document.createElement('div')
-  div.innerHTML = msg
-  result.appendChild(div)
+  var item = document.createElement('span')
+  item.innerHTML = item
+  result.appendChild(item)
 }
 
 mx.on('connection', function(stream) {
