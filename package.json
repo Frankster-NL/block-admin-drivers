@@ -21,7 +21,8 @@
     "msgpack-stream": "0.0.3",
     "msgpack-browserify": "0.0.0",
     "utilities-beagle": "https://github.com/timoxley/utilities/archive/master.tar.gz",
-    "ansi-html-stream": "0.0.2"
+    "ansi-html-stream": "0.0.2",
+    "commander": "~1.1.1"
   },
   "devDependencies": {
     "browserify": "~2.14.1"

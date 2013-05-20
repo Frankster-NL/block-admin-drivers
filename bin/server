@@ -26,7 +26,6 @@ app.listen(program.port, function() {
   log('listening on localhost:' + program.port)
 })
 
-
 var sock = shoe(function (stream) {
   log('new connection')
   var mx = MuxDemux()
