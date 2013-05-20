@@ -15,15 +15,18 @@ var ansi = require('ansi-html-stream')
 var JSONStream = require('json-stream')
 var docs = {}
 var executable = __dirname + '/../node_modules/utilities-beagle/bin/ninja_install -g'
+
 var app = http.createServer(ecstatic(__dirname + '/../public'))
-app.listen(9099)
+
+app.listen(9099, function() {
+  log('listening on localhost:9099')
+})
 
 var MuxDemux = require('mux-demux')
 
 var sock = shoe(function (stream) {
   log('new connection')
   var mx = MuxDemux()
-
   request
   .get('https://gist.github.com/weilu/8eed5843ab350b004505/raw/eb689fb68438ecaa43b58904f7a337a80761d143/ninja_blocks_drivers.json')
   .end(function(err, res) {
