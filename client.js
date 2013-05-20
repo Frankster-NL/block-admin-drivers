@@ -4,7 +4,6 @@ var rpc = require('rpc-stream')
 var MuxDemux = require('mux-demux')
 var shoe = require('shoe');
 var through = require('through');
-var xhr = require('xhr')
 
 var client = rpc()
 var remote = client.wrap(['install'])
