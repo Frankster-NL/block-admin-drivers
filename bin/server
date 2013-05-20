@@ -9,14 +9,21 @@ var ecstatic = require('ecstatic')
 var rpc = require('rpc-stream')
 var MuxDemux = require('mux-demux')
 var ansi = require('ansi-html-stream')
-var JSONStream = require('json-stream')
-var docs = {}
-var executable = __dirname + '/../node_modules/utilities-beagle/bin/ninja_install -g'
+var program = require('commander')
 
+program
+.version(require('../package.json').version)
+.option('-p, --port [port]', 'Port to listen on [port]', 9099)
+.parse(process.argv)
+
+var log = require('debug')('driver-install')
+
+var executable = __dirname + '/../node_modules/utilities-beagle/bin/ninja_install -g'
+var docs = {}
 var app = http.createServer(ecstatic(__dirname + '/../public'))
 
-app.listen(9099, function() {
-  log('listening on localhost:9099')
+app.listen(program.port, function() {
+  log('listening on localhost:' + program.port)
 })
 
 
