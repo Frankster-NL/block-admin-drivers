@@ -17,7 +17,7 @@ function log(msg) {
   if (msg.message) msg = msg.message
   var result = document.getElementById('console');
   var item = document.createElement('span')
-  item.innerHTML = item
+  item.innerHTML = msg
   result.appendChild(item)
 }
 
