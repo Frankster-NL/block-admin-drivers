@@ -1,7 +1,7 @@
 {
   "name": "ninja-driver-install",
   "version": "0.0.0",
-  "description": "ERROR: No README.md file found!",
+  "description": "Install drivers on a Ninja Block",
   "main": "index.js",
   "scripts": {
     "prepublish": "make -B"
