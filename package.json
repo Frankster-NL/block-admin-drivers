@@ -1,7 +1,7 @@
 {
-  "name": "ninja-driver-install",
-  "version": "0.0.0",
-  "description": "Install drivers on a Ninja Block",
+  "name": "block-admin-drivers",
+  "version": "0.0.1",
+  "description": "Manage Ninja Block driver installations.",
   "main": "index.js",
   "scripts": {
     "prepublish": "make -B"
