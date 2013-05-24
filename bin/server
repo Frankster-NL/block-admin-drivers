@@ -30,7 +30,7 @@ var sock = shoe(function (stream) {
   log('new connection')
   var mx = MuxDemux()
   request
-  .get('https://gist.github.com/weilu/8eed5843ab350b004505/raw/eb689fb68438ecaa43b58904f7a337a80761d143/ninja_blocks_drivers.json')
+  .get('https://gist.github.com/raw/672415928b1e0076c8dc/eb689fb68438ecaa43b58904f7a337a80761d143/ninja_blocks_drivers.json')
   .end(function(err, res) {
     if (err) return console.error(err)
     var drivers = mx.createStream('drivers')
