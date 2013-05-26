@@ -8,7 +8,6 @@ var through = require('through');
 var client = rpc()
 var remote = client.wrap(['install'])
 
-
 var stream = shoe('/driver-install');
 var mx = MuxDemux()
 mx.pipe(stream).pipe(mx)
