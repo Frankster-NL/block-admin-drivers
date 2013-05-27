@@ -45,8 +45,11 @@ var sock = shoe(function (stream) {
   })
 
   var rpcStream = mx.createStream('rpc')
+  var isInstalling = false
   var server = rpc({
     install: function(name, cb) {
+      if (isInstalling) return cb(new Error('Cannot install two drivers simultaneously\n'))
+      isInstalling = true
       log('installing', name)
       var logStream = mx.createStream('log')
       log('executing: ', executable + ' ' + name + ' /opt/ninja/drivers')
@@ -65,6 +68,7 @@ var sock = shoe(function (stream) {
       }
 
       installation.on('close', function(code) {
+        isInstalling = false
         if (code !== 0) {
           log('Installation Failed', name)
           return cb(new Error('Installation failed!\n'))
