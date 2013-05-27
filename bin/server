@@ -13,14 +13,15 @@ var program = require('commander')
 
 program
 .version(require('../package.json').version)
-.option('-p, --port [port]', 'Port to listen on [port]', 9099)
+.option('-p, --port [port]', 'port to listen on [port]', 9099)
+.option('-d, --dest [dir]', 'directory in which to install drivers', process.cwd())
 .option('-v, --verbose', 'verbose output')
 .parse(process.argv)
 
 if (program.verbose) process.env.DEBUG = '*'
 var log = require('debug')('driver-install')
 
-var executable = __dirname + '/../node_modules/ninja-toolbelt/bin/ninja install'
+var executable = __dirname + '/../node_modules/ninja-toolbelt/bin/ninja install --dest ' + program.dest
 var docs = {}
 var app = http.createServer(ecstatic(__dirname + '/../public'))
 
