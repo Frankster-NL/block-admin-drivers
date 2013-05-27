@@ -83,4 +83,4 @@ var sock = shoe(function (stream) {
   rpcStream.pipe(server).pipe(rpcStream)
 })
 
-sock.install(app, '/driver-install')
+sock.install(app, '/driver-admin')
