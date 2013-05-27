@@ -20,7 +20,7 @@ program
 if (program.verbose) process.env.DEBUG = '*'
 var log = require('debug')('driver-install')
 
-var executable = __dirname + '/../node_modules/utilities-beagle/bin/ninja_install -g'
+var executable = __dirname + '/../node_modules/ninja-toolbelt/bin/ninja install'
 var docs = {}
 var app = http.createServer(ecstatic(__dirname + '/../public'))
 
@@ -28,11 +28,13 @@ app.listen(program.port, function() {
   log('listening on localhost:' + program.port)
 })
 
+var DRIVERS_URL = 'http://wiki.ninjablocks.com/drivers.json'
+
 var sock = shoe(function (stream) {
   log('new connection')
   var mx = MuxDemux()
   request
-  .get('https://gist.github.com/raw/672415928b1e0076c8dc/eb689fb68438ecaa43b58904f7a337a80761d143/ninja_blocks_drivers.json')
+  .get(DRIVERS_URL)
   .end(function(err, res) {
     if (err) return console.error(err)
     var drivers = mx.createStream('drivers')
@@ -47,9 +49,9 @@ var sock = shoe(function (stream) {
     install: function(name, cb) {
       log('installing', name)
       var logStream = mx.createStream('log')
-      log('executing: ', executable + ' ' + name)
+      log('executing: ', executable + ' ' + name + ' /opt/ninja/drivers')
 
-      var installation = exec(executable + ' ' + name)
+      var installation = exec(executable + ' ' + name + ' /opt/ninja/drivers')
       installation.on('error', function(err) {
         console.error(err)
         cb(err.toString())
@@ -57,14 +59,18 @@ var sock = shoe(function (stream) {
 
       installation.stdout.pipe(ansi()).pipe(logStream)
       installation.stderr.pipe(ansi()).pipe(logStream)
+      if (process.verbose) {
+        installation.stdout.pipe(process.stdout)
+        installation.stderr.pipe(process.stderr)
+      }
 
       installation.on('close', function(code) {
         if (code !== 0) {
           log('Installation Failed', name)
-          return cb(new Error('Installation failed!'))
+          return cb(new Error('Installation failed!\n'))
         }
         log('Installation Success!')
-        return cb(null, 'Installation Success!')
+        return cb(null, 'Installation Success!\n')
       })
     }
   })

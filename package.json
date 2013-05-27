@@ -20,9 +20,9 @@
     "stream-combiner": "0.0.2",
     "msgpack-stream": "0.0.3",
     "msgpack-browserify": "0.0.0",
-    "utilities-beagle": "https://github.com/timoxley/utilities/archive/master.tar.gz",
     "ansi-html-stream": "0.0.2",
-    "commander": "~1.1.1"
+    "commander": "~1.1.1",
+    "ninja-toolbelt": "~0.2.7"
   },
   "devDependencies": {
     "browserify": "~2.14.1"
