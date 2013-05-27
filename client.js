@@ -60,7 +60,7 @@ var displayDrivers = through(function(driver) {
     '<td>'+driver.name+'</td>',
     '<td>'+driver.description+'</td>',
     '<td>'+driver.author+'</td>',
-    '<td><a href="#" data-url="'+driver.repository_url+'">Install</td>',
+    '<td><a href="#" data-url="'+(driver.url || driver.github_url)+'">Install</td>',
   ].join('\n')
   var link = tr.querySelector('a[data-url]')
   link.addEventListener('click', function(e) {
