@@ -43,7 +43,7 @@ shoe(function(stream) {
 .on('connect', function() {
   console.log('connected')
 }).on('disconnect', function(err) {
-  var message = err || 'No disconneciton error.'
+  var message = err || ''
   if (err && err.message) message = err.message
   console.log('disconnected', message)
 }).on('reconnect', function(attempts, timeout) {
