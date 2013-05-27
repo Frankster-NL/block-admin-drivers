@@ -67,7 +67,8 @@ var displayDrivers = through(function(driver) {
     e.preventDefault()
     var url = link.getAttribute('data-url')
     remote.install(url, function(err, message) {
-      log(err || message)
+      if (err) return log.error(message)
+      log(message)
     })
   })
   table.appendChild(tr)
