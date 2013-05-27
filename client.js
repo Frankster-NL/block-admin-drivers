@@ -5,6 +5,10 @@ var MuxDemux = require('mux-demux')
 var through = require('through');
 var shoe = require('reconnect/shoe')
 
+var Debug = require('debug/debug.js')
+window.debug = Debug
+var debug = Debug('driver-install')
+
 var client = rpc()
 var remote = client.wrap(['install'])
 
@@ -26,7 +30,7 @@ shoe(function(stream) {
   mx.pipe(stream).pipe(mx)
 
   mx.on('connection', function(stream) {
-    console.log('Connected', stream.meta)
+    debug('Connected', stream.meta)
     if (stream.meta === 'log') {
       stream.pipe(through(function(message) {
         log(message)
@@ -41,16 +45,15 @@ shoe(function(stream) {
   })
 }).connect('/driver-admin')
 .on('connect', function() {
-  console.log('connected')
+  debug('connected')
 }).on('disconnect', function(err) {
   var message = err || ''
   if (err && err.message) message = err.message
-  console.log('disconnected', message)
+  debug('disconnected', message)
 }).on('reconnect', function(attempts, timeout) {
   attempts++
-  console.log('attempting reconnection %d after %dms', attempts, timeout)
+  debug('attempting reconnection %d after %dms', attempts, timeout)
 })
-
 
 var displayDrivers = through(function(driver) {
   var table = document.getElementById('drivers');
