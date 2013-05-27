@@ -49,7 +49,7 @@ var sock = shoe(function (stream) {
   var isInstalling = false
   var server = rpc({
     install: function(name, cb) {
-      if (isInstalling) return cb(new Error('Cannot install two drivers simultaneously\n'))
+      if (isInstalling) return cb(new Error('cannot install two drivers simultaneously\n'))
       isInstalling = true
       log('installing', name)
       var logStream = mx.createStream('log')
