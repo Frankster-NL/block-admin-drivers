@@ -8,15 +8,35 @@
         padding: 20px;
         padding-bottom: 500px;
       }
-      #console {
+      .console {
+        position: fixed;
+        top: 0;
+        bottom: 0;
+        left: 0;
+        right: 0;
         padding: 1em;
-        background: black;
+        background: rgba(0,0,0,0.9);
         color: #eee;
+        opacity: 0;
+        display: none;
+        transition: opacity 0.3s;
+        margin: 0;
+      }
+      .console.visible {
+        display: block;
+        opacity: 1;
+        transition: opacity 0.3s;
       }
       #drivers {
         width: 100%;
         min-height: 200px;
       }
+      .moreInfo {
+        margin: 0.3em 1em;
+        font-size: smaller;
+        padding: 1px 3px;
+      }
+      
     </style>
     <link href="http://cdn.shopify.com/s/files/1/0201/1862/t/2/assets/styles.css?644" rel="stylesheet" type="text/css" media="all">
   </head>

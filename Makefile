@@ -1,2 +1,2 @@
 public/build.js: client.js
-	`npm bin`/browserify client.js > public/build.js
+	`npm bin`/browserify -t brfs client.js > public/build.js

@@ -6,10 +6,10 @@ var shoe = require('shoe')
 var request = require('superagent')
 var exec = require('child_process').exec
 var ecstatic = require('ecstatic')
-var rpc = require('rpc-stream')
 var MuxDemux = require('mux-demux')
 var ansi = require('ansi-html-stream')
 var program = require('commander')
+var through = require('through')
 
 program
 .version(require('../package.json').version)
@@ -45,43 +45,37 @@ var sock = shoe(function (stream) {
     })
   })
 
-  var rpcStream = mx.createStream('rpc')
-  var isInstalling = false
-  var server = rpc({
-    install: function(name, cb) {
-      if (isInstalling) return cb(new Error('Cannot install two drivers simultaneously\n'))
-      isInstalling = true
-      log('installing', name)
-      var logStream = mx.createStream('log')
-      log('executing: ', executable + ' ' + name + ' /opt/ninja/drivers')
+  mx.on('connection', function(stream) {
+    if (!stream.meta || !(stream.meta.command && stream.meta.url)) return
+    var name = stream.meta.url
+    log('installing', name)
+    log('executing: ', executable + ' ' + name + ' /opt/ninja/drivers')
 
-      var installation = exec(executable + ' ' + name + ' /opt/ninja/drivers')
-      installation.on('error', function(err) {
-        console.error(err)
-        cb(err.toString())
-      })
+    var installation = exec(executable + ' ' + name + ' /opt/ninja/drivers')
 
-      installation.stdout.pipe(ansi()).pipe(logStream)
-      installation.stderr.pipe(ansi()).pipe(logStream)
-      if (process.verbose) {
-        installation.stdout.pipe(process.stdout)
-        installation.stderr.pipe(process.stderr)
+    // TODO: fix mess.
+    installation.stdout.pipe(ansi()).pipe(through(function(data) {
+      this.push(data)
+    }, function() {
+    installation.on('exit', function(code) {
+      if (code !== 0) {
+        log('Installation Failed', name)
+        stream.end('Installation Failed\n\n')
+        return
       }
+      log('Installation Success!')
+      stream.end('Installation Success\n\n')
+    })
+    })).pipe(stream)
+    installation.stderr.pipe(ansi()).pipe(through(function(data) {
+      this.push(data)
+    }, function() {})).pipe(stream)
 
-      installation.on('close', function(code) {
-        isInstalling = false
-        if (code !== 0) {
-          log('Installation Failed', name)
-          return cb(new Error('Installation failed!\n'))
-        }
-        log('Installation Success!')
-        return cb(null, 'Installation Success!\n')
-      })
+    if (process.verbose) {
+      installation.stdout.pipe(process.stdout)
+      installation.stderr.pipe(process.stderr)
     }
   })
-
-  mx.pipe(stream).pipe(mx)
-  rpcStream.pipe(server).pipe(rpcStream)
 })
 
 sock.install(app, '/driver-admin')
