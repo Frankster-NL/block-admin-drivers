@@ -1,6 +1,5 @@
 "use strict"
 
-var rpc = require('rpc-stream')
 var MuxDemux = require('mux-demux')
 var through = require('through');
 var shoe = require('reconnect/shoe')
@@ -10,20 +9,12 @@ var Debug = require('debug/debug.js')
 window.debug = Debug
 var debug = Debug('driver-install')
 
-var client = rpc()
-var remote = client.wrap(['install'])
-
-
-
 shoe(function(stream) {
   var mx = MuxDemux()
   mx.pipe(stream).pipe(mx)
 
   mx.on('connection', function(stream) {
     debug('Connected', stream.meta)
-    if (stream.meta === 'rpc') {
-      stream.pipe(client).pipe(stream)
-    }
     if (stream.meta === 'drivers') {
       stream.pipe(displayDrivers(mx))
     }

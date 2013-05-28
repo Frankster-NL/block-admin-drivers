@@ -31,12 +31,15 @@ app.listen(program.port, function() {
 
 var DRIVERS_URL = 'http://wiki.ninjablocks.com/drivers.json'
 
-var sock = shoe(function (stream) {
+var sock = shoe(function(stream) {
   log('new connection')
   var mx = MuxDemux()
+  stream.pipe(mx).pipe(stream)
+
   request
   .get(DRIVERS_URL)
   .end(function(err, res) {
+    log('got drivers list')
     if (err) return console.error(err)
     var drivers = mx.createStream('drivers')
     var obj = JSON.parse(res.text)
@@ -57,7 +60,7 @@ var sock = shoe(function (stream) {
     installation.stdout.pipe(ansi()).pipe(through(function(data) {
       this.push(data)
     }, function() {
-    installation.on('exit', function(code) {
+    installation.on('close', function(code) {
       if (code !== 0) {
         log('Installation Failed', name)
         stream.end('Installation Failed\n\n')
