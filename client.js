@@ -86,7 +86,6 @@ var displayDrivers = function(mx) {
       })).pipe(findStatus(status))
       function findStatus(status) {
         return through(function(line) {
-          console.log('line', line.match(/installation success/gi))
           if (line.match(/Installation Failed/gi)) status("Failed")
           if (line.match(/Installation Success/gi)) status("Installed")
         })
