@@ -4,10 +4,10 @@ var MuxDemux = require('mux-demux')
 var through = require('through');
 var shoe = require('reconnect/shoe')
 var fs = require('fs');
-var html = fs.readFileSync(__dirname + '/public/console.html');
 var Debug = require('debug/debug.js')
 window.debug = Debug
 var debug = Debug('driver-install')
+var LogConsole = require('./console/index')
 
 shoe(function(stream) {
   var mx = MuxDemux()
@@ -49,16 +49,20 @@ var displayDrivers = function(mx) {
     link.addEventListener('click', function(e) {
       e.preventDefault()
       status("Installing")
-      if (link.consoleEl) return
-      var consoleEl = document.createElement('pre')
-      link.consoleEl = consoleEl
-      consoleEl.innerHTML = html
-      consoleEl.className = 'console'
-      consoleEl.querySelector('.buttonHide').addEventListener('click', function(e) {
-        e.preventDefault()
-        hide(consoleEl)
-      })
-      document.body.appendChild(consoleEl)
+
+      var url = link.getAttribute('data-url')
+      var logs = mx.createStream({command: 'install', url: url})
+      var logConsole = LogConsole()
+      logs.pipe(logConsole).pipe(findStatus(status))
+      function findStatus(status) {
+        return through(function(line) {
+          if (line.match(/Installation Failed/gi)) status("Failed")
+          if (line.match(/Installation Success/gi)) status("Installed")
+        })
+      }
+      if (link.logConsole) return
+      link.logConsole = true
+      document.body.appendChild(logConsole.el)
       function status(msg) {
         link.querySelector('.status').innerText = msg
       }
@@ -69,59 +73,9 @@ var displayDrivers = function(mx) {
 
       moreInfo.addEventListener('click', function(e) {
         e.preventDefault()
-        var style = getComputedStyle(consoleEl)
-        if (style.opacity == 0) {
-          show(consoleEl)
-        } else if (style.opacity == 1) {
-          hide(consoleEl)
-        }
+        logConsole.toggle()
       })
-
-
-      var url = link.getAttribute('data-url')
-      var logs = mx.createStream({command: 'install', url: url})
-      logs.pipe(through(function(message) {
-        log(consoleEl, message)
-        this.emit('data', message)
-      })).pipe(findStatus(status))
-      function findStatus(status) {
-        return through(function(line) {
-          if (line.match(/Installation Failed/gi)) status("Failed")
-          if (line.match(/Installation Success/gi)) status("Installed")
-        })
-      }
     })
     table.appendChild(tr)
   })
-
-}
-
-function hide(el) {
-  el.classList.remove('visible')
-  setTimeout(function() {
-    el.style.display = 'none'
-  }, 300)
-}
-
-function show(el) {
-  el.style.display = 'block'
-  el.classList.add('visible')
-}
-
-window.addEventListener('keydown', function(e) {
-  if (e.keyCode === 27) { // esc
-    
-  }
-})
-
-function log(el, msg) {
-  if (msg.message) msg = msg.message
-  var item = document.createElement('span')
-  item.innerHTML = msg
-  el.appendChild(item)
-}
-
-log.error = function(message) {
-  // TODO colorize or something
-  return log(message)
 }
