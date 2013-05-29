@@ -16,8 +16,11 @@ program
 .version(require('../package.json').version)
 .option('-p, --port [port]', 'port to listen on [port]', 9099)
 .option('-d, --driver-path [path]', 'path to drivers', process.cwd())
+.option('--pid [file]', 'file containing pid of ninja client', '')
 .option('-v, --verbose', 'verbose output')
 .parse(process.argv)
+
+var NINJA_CMD = path.normalize(__dirname + '/../node_modules/ninja-toolbelt/bin/ninja')
 
 if (program.verbose) process.env.DEBUG = '*'
 var log = require('debug')('driver-install')
@@ -30,6 +33,10 @@ app.listen(program.port, function() {
 })
 
 var DRIVERS_URL = 'http://wiki.ninjablocks.com/drivers.json'
+
+/*
+ * Handle incoming stream of 'commands'.
+ */
 
 var sock = shoe(function(stream) {
   log('new connection')
@@ -55,17 +62,34 @@ var sock = shoe(function(stream) {
   })
 })
 
+/*
+ * Command definitions
+ */
+
 var commands = {}
+
 commands.install = function install(options) {
-  var cmd = path.normalize(__dirname + '/../node_modules/ninja-toolbelt/bin/ninja')
-  var executable = cmd + ' install --dest ' + program.dest
+  var executable = NINJA_CMD + ' install --driver-path ' + program.driverPath
+  executable += program.pid ? '--pid ' + program.pid : ''
   return commandStream(executable).pipe(ansi())
 }
+
 commands.uninstall = function uninstall(options) {
-  var cmd = path.normalize(__dirname + '/../node_modules/ninja-toolbelt/bin/ninja')
-  var executable = cmd + ' install --dest ' + program.dest
+  var executable = NINJA_CMD + ' uninstall --driver-path ' + program.driverPath
+  executable += program.pid ? '--pid ' + program.pid : ''
   return commandStream(executable).pipe(ansi())
 }
+
+/**
+ * Executes `command`, returns stream of stdout/stderr.
+ * Keeps the stream open to write status code before
+ * closing.
+ *
+ * TODO: encode status code better. mux demux?
+ *
+ * @param {String} command command to execute
+ * @return {Stream}
+ */
 
 function commandStream(command) {
   log('executing: ', command)
@@ -82,3 +106,4 @@ function commandStream(command) {
 }
 
 sock.install(app, '/driver-admin')
+
