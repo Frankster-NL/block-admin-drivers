@@ -10,18 +10,18 @@ var MuxDemux = require('mux-demux')
 var ansi = require('ansi-html-stream')
 var program = require('commander')
 var through = require('through')
+var path = require('path')
 
 program
 .version(require('../package.json').version)
 .option('-p, --port [port]', 'port to listen on [port]', 9099)
-.option('-d, --dest [dir]', 'directory in which to install drivers', process.cwd())
+.option('-d, --driver-path [path]', 'path to drivers', process.cwd())
 .option('-v, --verbose', 'verbose output')
 .parse(process.argv)
 
 if (program.verbose) process.env.DEBUG = '*'
 var log = require('debug')('driver-install')
 
-var executable = __dirname + '/../node_modules/ninja-toolbelt/bin/ninja install --dest ' + program.dest
 var docs = {}
 var app = http.createServer(ecstatic(__dirname + '/../public'))
 
@@ -50,35 +50,35 @@ var sock = shoe(function(stream) {
 
   mx.on('connection', function(stream) {
     if (!stream.meta || !(stream.meta.command && stream.meta.url)) return
-    var name = stream.meta.url
-    log('installing', name)
-    log('executing: ', executable + ' ' + name + ' /opt/ninja/drivers')
-
-    var installation = exec(executable + ' ' + name + ' /opt/ninja/drivers')
-
-    // TODO: fix mess.
-    installation.stdout.pipe(ansi()).pipe(through(function(data) {
-      this.push(data)
-    }, function() {
-    installation.on('close', function(code) {
-      if (code !== 0) {
-        log('Installation Failed', name)
-        stream.end('Installation Failed\n\n')
-        return
-      }
-      log('Installation Success!')
-      stream.end('Installation Success\n\n')
-    })
-    })).pipe(stream)
-    installation.stderr.pipe(ansi()).pipe(through(function(data) {
-      this.push(data)
-    }, function() {})).pipe(stream)
-
-    if (process.verbose) {
-      installation.stdout.pipe(process.stdout)
-      installation.stderr.pipe(process.stderr)
-    }
+    if (!commands[stream.meta.command]) stream.end()
+    stream.pipe(commands[stream.meta.command](stream.meta)).pipe(stream)
   })
 })
+
+var commands = {}
+commands.install = function install(options) {
+  var cmd = path.normalize(__dirname + '/../node_modules/ninja-toolbelt/bin/ninja')
+  var executable = cmd + ' install --dest ' + program.dest
+  return commandStream(executable).pipe(ansi())
+}
+commands.uninstall = function uninstall(options) {
+  var cmd = path.normalize(__dirname + '/../node_modules/ninja-toolbelt/bin/ninja')
+  var executable = cmd + ' install --dest ' + program.dest
+  return commandStream(executable).pipe(ansi())
+}
+
+function commandStream(command) {
+  log('executing: ', command)
+  var child = exec(command)
+  child.on('close', function(code) {
+    log(command + ' exited with status ' + code)
+    stream.write(code)
+    stream.end()
+  })
+  var stream = through(function(data) {this.push(data)})
+  child.stdout.pipe(stream, {end: false})
+  child.stderr.pipe(stream, {end: false})
+  return stream
+}
 
 sock.install(app, '/driver-admin')
