@@ -44,8 +44,9 @@ shoe(function(stream) {
 
     el.logConsole = LogConsole('Installing ' + el.getAttribute('data-name'))
     document.body.appendChild(el.logConsole.el)
-    el.innerText = "Installing..."
     el.setAttribute('data-action', 'showlog')
+    el.innerText = "Connecting..."
+    logs.on('data', function() {el.innerText = "Installing..."})
     logs.pipe(el.logConsole).pipe(concat(function(data) {
       if (data.match(/Success\!/gi)) {
         el.innerText = "Uninstall"
@@ -63,8 +64,10 @@ shoe(function(stream) {
     }
     el.logConsole = LogConsole('Uninstalling ' +  url)
     document.body.appendChild(el.logConsole.el)
-    el.innerText = "Uninstalling..."
-    el.setAttribute('data-action', 'showlog')
+    el.innerText = "Connecting..."
+    logs.on('data', function() {
+      el.innerText = "Uninstalling..."
+    })
     logs.pipe(el.logConsole).pipe(concat(function(data) {
       if (data.match(/Success\!/gi)) {
         el.innerText = "Install"
