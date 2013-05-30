@@ -34,8 +34,12 @@ module.exports = function(template) {
   }
 
   stream.toggle = function() {
-    if (!this.visible) return stream.show()
-    if (this.visible) return stream.hide()
+    this.visible
+      ? stream.hide()
+      : stream.show()
+  }
+  stream.clear = function() {
+    el.querySelector('.messages').innerHTML = ''
   }
 
   stream.el = el
