@@ -48,11 +48,8 @@ var cachedDrivers = []
 
 var app = http.createServer(function(req, res) {
   if (req.url === '/') {
-    toolbelt.getInstalledDrivers(function(err, installedDrivers) {
-      if (err) throw err
-      var driverStream = from(cachedDrivers)
-      .pipe(getStatus(installedDrivers))
-      .pipe(driverRender())
+    getDrivers(function(err, drivers) {
+      var driverStream = drivers.pipe(driverRender())
 
       read(__dirname + '/../public/index.html')
       .pipe(hyperstream({"body > .container": read(__dirname + '/../public/drivers.html')}))
@@ -63,10 +60,8 @@ var app = http.createServer(function(req, res) {
   else ecstatic(req, res)
 })
 
-app.once('cache-updated', function() {
-  app.listen(program.port, function() {
-    log('listening on localhost:' + program.port)
-  })
+app.listen(program.port, function() {
+  log('listening on localhost:' + program.port)
 })
 
 updateDriversCache()
@@ -135,9 +130,11 @@ function commandStream(command) {
 }
 
 function updateDriversCache() {
+  updateDriversCache.updating = true
   log('updating drivers cache from %s', DRIVERS_URL)
   JSONStreamRequest(DRIVERS_URL)
   .pipe(concat(function(result) {
+    updateDriversCache.updating = false
     cachedDrivers = result
     app.emit('cache-updated')
   }))
@@ -147,6 +144,17 @@ function JSONStreamRequest(url) {
  return request
   .get(url)
   .pipe(JSONStream.parse([true]))
+}
+
+function getDrivers(fn) {
+  if (!cachedDrivers || updateDriversCache.updating) {
+    return app.once('cache-updated', getDrivers)
+  }
+  toolbelt.getInstalledDrivers(function(err, installedDrivers) {
+    if (err) return fn(err)
+    fn(null, from(cachedDrivers)
+    .pipe(getStatus(installedDrivers)))
+  })
 }
 
 function getStatus(installedDrivers) {
