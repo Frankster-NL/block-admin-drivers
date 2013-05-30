@@ -5,12 +5,21 @@ var http = require('http')
 var shoe = require('shoe')
 var request = require('superagent')
 var exec = require('child_process').exec
-var ecstatic = require('ecstatic')
+var ecstatic = require('ecstatic')(__dirname + '/../public')
 var MuxDemux = require('mux-demux')
 var ansi = require('ansi-html-stream')
 var program = require('commander')
 var through = require('through')
 var path = require('path')
+var JSONStream = require('JSONStream')
+var concat = require('concat-stream')
+var hyperspace = require('hyperspace')
+var hyperstream = require('hyperstream')
+var from = require('from')
+var fs = require('fs')
+var read = fs.createReadStream
+
+var DRIVERS_URL = 'http://wiki.ninjablocks.com/drivers.json'
 
 program
 .version(require('../package.json').version)
@@ -21,18 +30,46 @@ program
 .parse(process.argv)
 
 var NINJA_CMD = path.normalize(__dirname + '/../node_modules/ninja-toolbelt/bin/ninja')
+var toolbelt = require('ninja-toolbelt')(program.driverPath)
 
 if (program.verbose) process.env.DEBUG = '*'
-var log = require('debug')('driver-install')
+var log = require('debug')('driver-admin')
 
 var docs = {}
-var app = http.createServer(ecstatic(__dirname + '/../public'))
+var driversHtml = fs.readFileSync(__dirname + '/../public/drivers.html')
+var pageHtml = fs.readFileSync(__dirname + '/../public/index.html')
 
-app.listen(program.port, function() {
-  log('listening on localhost:' + program.port)
+var driverRender = require('../driver-render')
+var cachedDrivers = []
+
+/*
+ * App startup
+ */
+
+var app = http.createServer(function(req, res) {
+  if (req.url === '/') {
+    toolbelt.getInstalledDrivers(function(err, installedDrivers) {
+      if (err) throw err
+      var driverStream = from(cachedDrivers)
+      .pipe(getStatus(installedDrivers))
+      .pipe(driverRender())
+
+      read(__dirname + '/../public/index.html')
+      .pipe(hyperstream({"body > .container": read(__dirname + '/../public/drivers.html')}))
+      .pipe(hyperstream({"#drivers tbody": driverStream}))
+      .pipe(res)
+    })
+  }
+  else ecstatic(req, res)
 })
 
-var DRIVERS_URL = 'http://wiki.ninjablocks.com/drivers.json'
+app.once('cache-updated', function() {
+  app.listen(program.port, function() {
+    log('listening on localhost:' + program.port)
+  })
+})
+
+updateDriversCache()
 
 /*
  * Handle incoming stream of 'commands'.
@@ -42,25 +79,14 @@ var sock = shoe(function(stream) {
   log('new connection')
   var mx = MuxDemux()
   stream.pipe(mx).pipe(stream)
-
-  request
-  .get(DRIVERS_URL)
-  .end(function(err, res) {
-    log('got drivers list')
-    if (err) return console.error(err)
-    var drivers = mx.createStream('drivers')
-    var obj = JSON.parse(res.text)
-    obj.forEach(function(driver) {
-      drivers.write(driver)
-    })
-  })
-
   mx.on('connection', function(stream) {
     if (!stream.meta || !(stream.meta.command && stream.meta.url)) return
     if (!commands[stream.meta.command]) stream.end()
     stream.pipe(commands[stream.meta.command](stream.meta)).pipe(stream)
   })
 })
+
+sock.install(app, '/driver-admin')
 
 /*
  * Command definitions
@@ -71,12 +97,14 @@ var commands = {}
 commands.install = function install(options) {
   var executable = NINJA_CMD + ' install --driver-path ' + program.driverPath
   executable += program.pid ? '--pid ' + program.pid : ''
+  executable += ' ' + options.url
   return commandStream(executable).pipe(ansi())
 }
 
 commands.uninstall = function uninstall(options) {
   var executable = NINJA_CMD + ' uninstall --driver-path ' + program.driverPath
   executable += program.pid ? '--pid ' + program.pid : ''
+  executable += ' ' + options.url
   return commandStream(executable).pipe(ansi())
 }
 
@@ -96,7 +124,8 @@ function commandStream(command) {
   var child = exec(command)
   child.on('close', function(code) {
     log(command + ' exited with status ' + code)
-    stream.write(code)
+    if (code > 0) stream.write('Failed!\n\n')
+    else stream.write('Success!\n\n')
     stream.end()
   })
   var stream = through(function(data) {this.push(data)})
@@ -105,5 +134,26 @@ function commandStream(command) {
   return stream
 }
 
-sock.install(app, '/driver-admin')
+function updateDriversCache() {
+  log('updating drivers cache from %s', DRIVERS_URL)
+  JSONStreamRequest(DRIVERS_URL)
+  .pipe(concat(function(result) {
+    cachedDrivers = result
+    app.emit('cache-updated')
+  }))
+}
+
+function JSONStreamRequest(url) {
+ return request
+  .get(url)
+  .pipe(JSONStream.parse([true]))
+}
+
+function getStatus(installedDrivers) {
+  return through(function(driver) {
+    if (installedDrivers.indexOf(driver.name) !== -1) driver.status = 'Installed'
+    this.push(driver)
+  })
+}
+
 
