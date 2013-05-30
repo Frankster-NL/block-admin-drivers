@@ -148,7 +148,7 @@ function JSONStreamRequest(url) {
 
 function getDrivers(fn) {
   if (!cachedDrivers || updateDriversCache.updating) {
-    return app.once('cache-updated', getDrivers)
+    return app.once('cache-updated', getDrivers.bind(null, fn))
   }
   toolbelt.getInstalledDrivers(function(err, installedDrivers) {
     if (err) return fn(err)
