@@ -4,8 +4,10 @@ var through = require('through')
 var fs = require('fs')
 var html = fs.readFileSync(__dirname + '/template.html');
 
-module.exports = function(template) {
-  var el = toElement(html || template)
+module.exports = function(heading) {
+  var el = toElement(html)
+  el.querySelector('.title').innerText = heading
+
   el.querySelector('[data-action=hide]').addEventListener('click', function(e) {
     e.preventDefault()
     stream.hide(el)

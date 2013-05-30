@@ -42,7 +42,7 @@ shoe(function(stream) {
       document.body.removeChild(el.logConsole.el)
     }
 
-    el.logConsole = LogConsole()
+    el.logConsole = LogConsole('Installing ' + el.getAttribute('data-name'))
     document.body.appendChild(el.logConsole.el)
     el.innerText = "Installing..."
     el.setAttribute('data-action', 'showlog')
@@ -61,7 +61,7 @@ shoe(function(stream) {
     if (el.logConsole) {
       document.body.removeChild(el.logConsole.el)
     }
-    el.logConsole = LogConsole()
+    el.logConsole = LogConsole('Uninstalling ' +  url)
     document.body.appendChild(el.logConsole.el)
     el.innerText = "Uninstalling..."
     el.setAttribute('data-action', 'showlog')
