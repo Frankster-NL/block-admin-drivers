@@ -1,3 +1,5 @@
+"use strict"
+
 var through = require('through')
 var fs = require('fs')
 var html = fs.readFileSync(__dirname + '/template.html');
