@@ -5,10 +5,8 @@ var fs = require('fs')
 var html = fs.readFileSync(__dirname + '/template.html');
 
 module.exports = function(template) {
-  var el = document.createElement('pre')
-  el.innerHTML = template || html
-  el.className = 'console'
-  el.querySelector('.buttonHide').addEventListener('click', function(e) {
+  var el = toElement(html || template)
+  el.querySelector('[data-action=hide]').addEventListener('click', function(e) {
     e.preventDefault()
     stream.hide(el)
   })
@@ -17,7 +15,7 @@ module.exports = function(template) {
     if (msg.message) msg = msg.message
     var item = document.createElement('span')
     item.innerHTML = msg
-    el.appendChild(item)
+    el.querySelector('.messages').appendChild(item)
     this.push(msg)
   })
 
@@ -42,4 +40,10 @@ module.exports = function(template) {
 
   stream.el = el
   return stream
+}
+
+function toElement(html) {
+  var dummy = document.createElement('div') // dummy div
+  dummy.innerHTML = html
+  return dummy.firstChild // extract real element
 }
