@@ -25,6 +25,7 @@ program
 .version(require('../package.json').version)
 .option('-p, --port [port]', 'port to listen on [port]', 9099)
 .option('-d, --driver-path [path]', 'path to drivers', process.cwd())
+.option('--auth [file]', 'path to user authentication file', process.cwd() + '/users.htpasswd')
 .option('--pid [file]', 'file containing pid of ninja client', '')
 .option('-v, --verbose', 'verbose output')
 .parse(process.argv)
@@ -42,22 +43,33 @@ var pageHtml = fs.readFileSync(__dirname + '/../public/index.html')
 var driverRender = require('../driver-render')
 var cachedDrivers = []
 
+// TODO factor this out
+var auth = require('http-auth')
+var basic = auth({
+  authType: 'digest',
+  authRealm: "ninjablock.admin", // what should this be?
+  authFile: program.auth
+})
+
 /*
  * App startup
  */
 
 var app = http.createServer(function(req, res) {
-  if (req.url === '/') {
-    getDrivers(function(err, drivers) {
-      var driverStream = drivers.pipe(driverRender())
+  basic.apply(req, res, function(username) {
+    // authenticated request
+    if (req.url === '/') {
+      getDrivers(function(err, drivers) {
+        var driverStream = drivers.pipe(driverRender())
 
-      read(__dirname + '/../public/index.html')
-      .pipe(hyperstream({"body > .container": read(__dirname + '/../public/drivers.html')}))
-      .pipe(hyperstream({"#drivers tbody": driverStream}))
-      .pipe(res)
-    })
-  }
-  else ecstatic(req, res)
+        read(__dirname + '/../public/index.html')
+        .pipe(hyperstream({"body > .container": read(__dirname + '/../public/drivers.html')}))
+        .pipe(hyperstream({"#drivers tbody": driverStream}))
+        .pipe(res)
+      })
+    }
+    else ecstatic(req, res)
+  });
 })
 
 app.listen(program.port, function() {
