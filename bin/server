@@ -142,15 +142,25 @@ function commandStream(command) {
 }
 
 function updateDriversCache() {
+  if (updateDriversCache.updating) return
+
   updateDriversCache.updating = true
   log('updating drivers cache from %s', DRIVERS_URL)
   JSONStreamRequest(DRIVERS_URL)
   .pipe(concat(function(result) {
     updateDriversCache.updating = false
+    updateDriversCache.last = Date.now()
     cachedDrivers = result
     app.emit('cache-updated')
   }))
 }
+
+updateDriversCache.needsUpdate = function() {
+  if (updateDriversCache.updating) return false
+  return (Date.now() - updateDriversCache.last) > 60000 // only check once every minute
+}
+
+updateDriversCache.last = Date.now() - 99999
 
 function JSONStreamRequest(url) {
  return request
@@ -159,7 +169,8 @@ function JSONStreamRequest(url) {
 }
 
 function getDrivers(fn) {
-  if (!cachedDrivers || updateDriversCache.updating) {
+  if (updateDriversCache.needsUpdate() || updateDriversCache.updating) {
+    updateDriversCache()
     return app.once('cache-updated', getDrivers.bind(null, fn))
   }
   toolbelt.getInstalledDrivers(function(err, installedDrivers) {
