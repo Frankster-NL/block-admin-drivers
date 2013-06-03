@@ -11,7 +11,9 @@ release:
 	tar -czvf ../driver-admin.tar.gz .
 	scp ../driver-admin.tar.gz ubuntu@ninjablock.local:~/tmp
 	rm ../driver-admin.tar.gz
-
+	@echo ""
+	@echo "Now do something like:"
+	@echo ""
 	@echo "ssh ubuntu@ninjablock.local"
 	@echo "cd ~/tmp"
 	@echo "rm -Rf ./driver-admin"
@@ -19,10 +21,12 @@ release:
 	@echo "tar -xzvf driver-admin.tar.gz -C driver-admin"
 	@echo "cd driver-admin"
 	@echo "npm rebuild"
-	@echo "git checkout -b release"
-	@echo "git add ."
-	@echo "git commit -m 'Update release build'"
+	@echo "rm driver-admin.tar.gz"
+	@echo "cd .."
+	@echo "tar -cvzf driver-admin.tar.gz driver-admin"
+	@echo "Trasfer file back, switch to release branch on original computer."
+	@echo "git add node_modules public/build.js -f"
+	@echo "git commit -m 'Updated release'"
 	@echo "git push"
-	@echo "exit"
 
 @PHONY: release
