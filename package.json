@@ -4,7 +4,6 @@
   "description": "Manage Ninja Block driver installations.",
   "main": "index.js",
   "scripts": {
-    "postinstall": "make -B"
   },
   "repository": "",
   "author": "",
