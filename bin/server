@@ -115,14 +115,14 @@ var commands = {}
 
 commands.install = function install(options) {
   var executable = NINJA_CMD + ' install --driver-path ' + program.driverPath
-  executable += program.pid ? '--pid ' + program.pid : ''
+  executable += program.pid ? ' --pid ' + program.pid : ''
   executable += ' ' + options.url
   return commandStream(executable).pipe(ansi())
 }
 
 commands.uninstall = function uninstall(options) {
   var executable = NINJA_CMD + ' uninstall --driver-path ' + program.driverPath
-  executable += program.pid ? '--pid ' + program.pid : ''
+  executable += program.pid ? ' --pid ' + program.pid : ''
   executable += ' ' + options.url
   return commandStream(executable).pipe(ansi())
 }
