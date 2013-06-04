@@ -4,6 +4,7 @@
   "description": "Manage Ninja Block driver installations.",
   "main": "index.js",
   "scripts": {
+    "prepublish": "`npm bin`/browserify -t brfs client.js > public/build.js"
   },
   "repository": "",
   "author": "",
