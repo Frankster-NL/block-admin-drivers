@@ -45,9 +45,12 @@ shoe(function(stream) {
     el.logConsole = LogConsole('Installing ' + el.getAttribute('data-name'))
 
     el.logConsole.on('hide', function() {
+      document.body.style.overflow = 'auto';
       document.body.removeChild(el.logConsole.el)
     })
     el.logConsole.on('show', function() {
+      document.body.style.overflow = 'hidden';
+      el.logConsole.el.style.top = window.pageYOffset
       document.body.appendChild(el.logConsole.el)
     })
 
@@ -72,9 +75,12 @@ shoe(function(stream) {
     }
     el.logConsole = LogConsole('Uninstalling ' +  url)
     el.logConsole.on('hide', function() {
+      document.body.style.overflow = 'auto';
       document.body.removeChild(el.logConsole.el)
     })
     el.logConsole.on('show', function() {
+      document.body.style.overflow = 'hidden';
+      el.logConsole.el.style.top = window.pageYOffset
       document.body.appendChild(el.logConsole.el)
     })
 
