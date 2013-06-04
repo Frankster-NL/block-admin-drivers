@@ -12,7 +12,7 @@ module.exports = function() {
         href: '#' + driver.name,
         "data-action": getAction(driver.status).toLowerCase(),
         "data-name": driver.name,
-        "data-url": driver.url,
+        "data-url": driver.repository_url || driver.url,
         _text: getAction(driver.status)
       }
     }
