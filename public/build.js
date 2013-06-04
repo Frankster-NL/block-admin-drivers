@@ -168,12 +168,19 @@ shoe(function(stream) {
     var url = el.getAttribute('data-url')
     var logs = mx.createStream({command: 'install', url: url})
 
-    if (el.logConsole) {
+    if (el.logConsole && document.body.contains(el.logConsole.el)) {
       document.body.removeChild(el.logConsole.el)
     }
 
     el.logConsole = LogConsole('Installing ' + el.getAttribute('data-name'))
-    document.body.appendChild(el.logConsole.el)
+
+    el.logConsole.on('hide', function() {
+      document.body.removeChild(el.logConsole.el)
+    })
+    el.logConsole.on('show', function() {
+      document.body.appendChild(el.logConsole.el)
+    })
+
     el.setAttribute('data-action', 'showlog')
     el.innerText = "Connecting..."
     logs.on('data', function() {el.innerText = "Installing..."})
@@ -189,11 +196,18 @@ shoe(function(stream) {
   commands.uninstall = function(el, url) {
     var url = el.getAttribute('data-name')
     var logs = mx.createStream({command: 'uninstall', url: url})
-    if (el.logConsole) {
+
+    if (el.logConsole && document.body.contains(el.logConsole.el)) {
       document.body.removeChild(el.logConsole.el)
     }
     el.logConsole = LogConsole('Uninstalling ' +  url)
-    document.body.appendChild(el.logConsole.el)
+    el.logConsole.on('hide', function() {
+      document.body.removeChild(el.logConsole.el)
+    })
+    el.logConsole.on('show', function() {
+      document.body.appendChild(el.logConsole.el)
+    })
+
     el.innerText = "Connecting..."
     logs.on('data', function() {
       el.innerText = "Uninstalling..."
@@ -7990,40 +8004,7 @@ if (typeof module === 'object' && module && module.exports) {
 
 
 })()
-},{}],18:[function(require,module,exports){
-/*
- * Copyright (c) 2012 Mathieu Turcotte
- * Licensed under the MIT license.
- */
-
-var Backoff = require('./lib/backoff'),
-    FibonacciBackoffStrategy = require('./lib/strategy/fibonacci'),
-    ExponentialBackoffStrategy = require('./lib/strategy/exponential');
-
-module.exports.Backoff = Backoff;
-module.exports.FibonacciStrategy = FibonacciBackoffStrategy;
-module.exports.ExponentialStrategy = ExponentialBackoffStrategy;
-
-/**
- * Constructs a Fibonacci backoff.
- * @param options Fibonacci backoff strategy arguments.
- * @see FibonacciBackoffStrategy
- */
-module.exports.fibonacci = function(options) {
-    return new Backoff(new FibonacciBackoffStrategy(options));
-};
-
-/**
- * Constructs an exponential backoff.
- * @param options Exponential strategy arguments.
- * @see ExponentialBackoffStrategy
- */
-module.exports.exponential = function(options) {
-    return new Backoff(new ExponentialBackoffStrategy(options));
-};
-
-
-},{"./lib/backoff":26,"./lib/strategy/fibonacci":27,"./lib/strategy/exponential":28}],17:[function(require,module,exports){
+},{}],17:[function(require,module,exports){
 
 var h = require('hyperscript')
 var o = require('observable')
@@ -8072,7 +8053,40 @@ module.exports = function (emitter) {
   return el
 }
 
-},{"hyperscript":29,"observable":30}],20:[function(require,module,exports){
+},{"hyperscript":26,"observable":27}],18:[function(require,module,exports){
+/*
+ * Copyright (c) 2012 Mathieu Turcotte
+ * Licensed under the MIT license.
+ */
+
+var Backoff = require('./lib/backoff'),
+    FibonacciBackoffStrategy = require('./lib/strategy/fibonacci'),
+    ExponentialBackoffStrategy = require('./lib/strategy/exponential');
+
+module.exports.Backoff = Backoff;
+module.exports.FibonacciStrategy = FibonacciBackoffStrategy;
+module.exports.ExponentialStrategy = ExponentialBackoffStrategy;
+
+/**
+ * Constructs a Fibonacci backoff.
+ * @param options Fibonacci backoff strategy arguments.
+ * @see FibonacciBackoffStrategy
+ */
+module.exports.fibonacci = function(options) {
+    return new Backoff(new FibonacciBackoffStrategy(options));
+};
+
+/**
+ * Constructs an exponential backoff.
+ * @param options Exponential strategy arguments.
+ * @see ExponentialBackoffStrategy
+ */
+module.exports.exponential = function(options) {
+    return new Backoff(new ExponentialBackoffStrategy(options));
+};
+
+
+},{"./lib/backoff":28,"./lib/strategy/fibonacci":29,"./lib/strategy/exponential":30}],20:[function(require,module,exports){
 var sax = require('sax');
 var select = require('./lib/select');
 
@@ -8193,7 +8207,7 @@ module.exports = function (opts) {
 
 var through = require('through')
 var fs = require('fs')
-var html = "<div class=\"console\">\n  <h3 class=\"title left center\"></h3>\n  <button data-action=\"hide\" class=\"button right\">&#x2716;</button>\n  <pre class=\"messages left\"></pre>\n</div>\n";
+var html = "<div class=\"console\">\n  <h3 class=\"title left center\"></h3>\n  <button data-action=\"hide\" class=\"button right\">&#x2716;</button>\n  <pre class=\"messages\"></pre>\n</div>\n";
 
 module.exports = function(heading) {
   var el = toElement(html)
@@ -8209,18 +8223,22 @@ module.exports = function(heading) {
     var item = document.createElement('span')
     item.innerHTML = msg
     el.querySelector('.messages').appendChild(item)
+    if (stream.visible) {
+      el.querySelector('.messages').scrollTop = el.querySelector('.messages').scrollHeight
+    }
     this.push(msg)
   })
 
   stream.hide = function() {
     el.classList.remove('visible')
     setTimeout(function() {
-      el.style.display = 'none'
+      stream.emit('hide')
     }, 300)
     this.visible = false
   }
 
   stream.show = function() {
+    this.emit('show')
     el.style.display = 'block'
     el.classList.add('visible')
     this.visible = true
@@ -8245,71 +8263,7 @@ function toElement(html) {
   return dummy.firstChild // extract real element
 }
 
-},{"fs":1,"through":6}],26:[function(require,module,exports){
-/*
- * Copyright (c) 2012 Mathieu Turcotte
- * Licensed under the MIT license.
- */
-
-var events = require('events'),
-    util = require('util');
-
-/**
- * Backoff driver.
- * @param backoffStrategy Backoff delay generator/strategy.
- * @constructor
- */
-function Backoff(backoffStrategy) {
-    events.EventEmitter.call(this);
-
-    this.backoffStrategy_ = backoffStrategy;
-    this.backoffNumber_ = 0;
-    this.backoffDelay_ = 0;
-    this.timeoutID_ = -1;
-
-    this.handlers = {
-        backoff: this.onBackoff_.bind(this)
-    };
-}
-util.inherits(Backoff, events.EventEmitter);
-
-/**
- * Starts a backoff operation.
- */
-Backoff.prototype.backoff = function() {
-    if (this.timeoutID_ !== -1) {
-        throw new Error('Backoff in progress.');
-    }
-
-    this.backoffDelay_ = this.backoffStrategy_.next();
-    this.timeoutID_ = setTimeout(this.handlers.backoff, this.backoffDelay_);
-    this.emit('backoff', this.backoffNumber_, this.backoffDelay_);
-};
-
-/**
- * Backoff completion handler.
- * @private
- */
-Backoff.prototype.onBackoff_ = function() {
-    this.timeoutID_ = -1;
-    this.emit('ready', this.backoffNumber_++, this.backoffDelay_);
-};
-
-/**
- * Stops any backoff operation and resets the backoff
- * delay to its inital value.
- */
-Backoff.prototype.reset = function() {
-    this.backoffNumber_ = 0;
-    this.backoffStrategy_.reset();
-    clearTimeout(this.timeoutID_);
-    this.timeoutID_ = -1;
-};
-
-module.exports = Backoff;
-
-
-},{"events":14,"util":13}],30:[function(require,module,exports){
+},{"fs":1,"through":6}],27:[function(require,module,exports){
 ;(function () {
 
 // bind a to b -- One Way Binding
@@ -8509,7 +8463,71 @@ if('object' === typeof module) module.exports = exports
 else                           this.observable = exports
 })()
 
-},{}],32:[function(require,module,exports){
+},{}],28:[function(require,module,exports){
+/*
+ * Copyright (c) 2012 Mathieu Turcotte
+ * Licensed under the MIT license.
+ */
+
+var events = require('events'),
+    util = require('util');
+
+/**
+ * Backoff driver.
+ * @param backoffStrategy Backoff delay generator/strategy.
+ * @constructor
+ */
+function Backoff(backoffStrategy) {
+    events.EventEmitter.call(this);
+
+    this.backoffStrategy_ = backoffStrategy;
+    this.backoffNumber_ = 0;
+    this.backoffDelay_ = 0;
+    this.timeoutID_ = -1;
+
+    this.handlers = {
+        backoff: this.onBackoff_.bind(this)
+    };
+}
+util.inherits(Backoff, events.EventEmitter);
+
+/**
+ * Starts a backoff operation.
+ */
+Backoff.prototype.backoff = function() {
+    if (this.timeoutID_ !== -1) {
+        throw new Error('Backoff in progress.');
+    }
+
+    this.backoffDelay_ = this.backoffStrategy_.next();
+    this.timeoutID_ = setTimeout(this.handlers.backoff, this.backoffDelay_);
+    this.emit('backoff', this.backoffNumber_, this.backoffDelay_);
+};
+
+/**
+ * Backoff completion handler.
+ * @private
+ */
+Backoff.prototype.onBackoff_ = function() {
+    this.timeoutID_ = -1;
+    this.emit('ready', this.backoffNumber_++, this.backoffDelay_);
+};
+
+/**
+ * Stops any backoff operation and resets the backoff
+ * delay to its inital value.
+ */
+Backoff.prototype.reset = function() {
+    this.backoffNumber_ = 0;
+    this.backoffStrategy_.reset();
+    clearTimeout(this.timeoutID_);
+    this.timeoutID_ = -1;
+};
+
+module.exports = Backoff;
+
+
+},{"events":14,"util":13}],32:[function(require,module,exports){
 (function(){// wrapper for non-node envs
 ;(function (sax) {
 
@@ -9582,26 +9600,7 @@ module.exports = function () {
     }
 };
 
-},{"through":6}],21:[function(require,module,exports){
-var duplexer = require('duplexer');
-var through = require('through');
-
-module.exports = function (a, b) {
-    a.pipe(through(
-        function (buf) { b.write(buf) },
-        function () { b.end() }
-    ));
-    var dup = duplexer(a, b);
-    dup.on('pause', function () {
-        b.pause();
-    });
-    dup.on('resume', function () {
-        b.resume();
-    });
-    return dup;
-};
-
-},{"duplexer":33,"through":6}],33:[function(require,module,exports){
+},{"through":6}],33:[function(require,module,exports){
 var Stream = require("stream")
     , writeMethods = ["write", "end", "destroy"]
     , readMethods = ["resume", "pause"]
@@ -9680,7 +9679,26 @@ function duplex(writer, reader) {
     }
 }
 
-},{"stream":11}],27:[function(require,module,exports){
+},{"stream":11}],21:[function(require,module,exports){
+var duplexer = require('duplexer');
+var through = require('through');
+
+module.exports = function (a, b) {
+    a.pipe(through(
+        function (buf) { b.write(buf) },
+        function () { b.end() }
+    ));
+    var dup = duplexer(a, b);
+    dup.on('pause', function () {
+        b.pause();
+    });
+    dup.on('resume', function () {
+        b.resume();
+    });
+    return dup;
+};
+
+},{"duplexer":33,"through":6}],29:[function(require,module,exports){
 /*
  * Copyright (c) 2012 Mathieu Turcotte
  * Licensed under the MIT license.
@@ -9718,7 +9736,7 @@ FibonacciBackoffStrategy.prototype.reset_ = function() {
 module.exports = FibonacciBackoffStrategy;
 
 
-},{"util":13,"./strategy":34}],28:[function(require,module,exports){
+},{"util":13,"./strategy":34}],30:[function(require,module,exports){
 /*
  * Copyright (c) 2012 Mathieu Turcotte
  * Licensed under the MIT license.
@@ -9854,7 +9872,7 @@ BackoffStrategy.prototype.reset_ = function() {
 module.exports = BackoffStrategy;
 
 
-},{"events":14,"util":13}],29:[function(require,module,exports){
+},{"events":14,"util":13}],26:[function(require,module,exports){
 var split = require('browser-split')
 var ClassList = require('class-list')
 
