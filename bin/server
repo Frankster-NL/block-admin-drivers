@@ -99,8 +99,8 @@ var sock = shoe(function(stream) {
   var mx = MuxDemux()
   stream.pipe(mx).pipe(stream)
   mx.on('connection', function(stream) {
-    if (!stream.meta || !(stream.meta.command && stream.meta.url)) return
-    if (!commands[stream.meta.command]) stream.end()
+    if (!stream.meta || !(stream.meta.command && stream.meta.url)) return stream.end()
+    if (!commands[stream.meta.command]) return stream.end()
     stream.pipe(commands[stream.meta.command](stream.meta)).pipe(stream)
   })
 })
