@@ -9,29 +9,37 @@
         padding-bottom: 500px;
       }
       .console {
-        position: fixed;
+        width: 95%;
+        height: 95%;
+        position: absolute;
         top: 0;
         bottom: 0;
         left: 0;
         right: 0;
-        padding: 1em;
+        padding: 2.5%;
         background: rgba(0,0,0,0.9);
         color: #eee;
-        opacity: 0;
-        display: none;
-        transition: opacity 0.3s;
         margin: 0;
+        pointer-events: none;
+        opacity: 0;
       }
       .console .messages {
+        max-height: 80%;
         background: transparent;
         border: none;
         clear: both;
-        margin: 0 auto;
+        padding: 1em 0;
+        margin: 0;
       }
       .console.visible {
-        display: block;
         opacity: 1;
-        transition: opacity 0.3s;
+        pointer-events: auto;
+        position: fixed;
+      }
+      .console .button {
+        position: relative;
+        z-index: 9999;
+      
       }
 
       .hide {
@@ -52,7 +60,7 @@
   </head>
   <body>
     <div class="container">
-      <script src="build.js"></script>
+      <script src="build.js?687967896789"></script>
     </div>
   </body>
 </html>
