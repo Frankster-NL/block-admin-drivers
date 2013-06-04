@@ -56,8 +56,8 @@ var basic = auth({
  */
 
 var app = http.createServer(function(req, res) {
-  basic.apply(req, res, function(username) {
-    // authenticated request
+
+  function handleRequest() {
     if (req.url === '/') {
       getDrivers(function(err, drivers) {
         var driverStream = drivers.pipe(driverRender())
@@ -69,7 +69,19 @@ var app = http.createServer(function(req, res) {
       })
     }
     else ecstatic(req, res)
-  });
+  }
+
+  var isLocal = (req.connection.remoteAddress == '127.0.0.1')
+
+  if (isLocal) {
+    // unauthenticated local request
+    handleRequest()
+  } else {
+    basic.apply(req, res, function(username) {
+      // authenticated request
+      handleRequest()
+    });
+  }
 })
 
 app.listen(program.port, function() {
