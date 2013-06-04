@@ -4980,91 +4980,7 @@ EventEmitter.prototype.listeners = function(type) {
 };
 
 })(require("__browserify_process"))
-},{"__browserify_process":10}],7:[function(require,module,exports){
-(function(process){var trumpet = require('trumpet');
-var through = require('through');
-var throughout = require('throughout');
-
-var upto = require('./lib/upto');
-
-module.exports = function (streamMap) {
-    if (!streamMap) streamMap = {};
-    
-    var tr = trumpet();
-    
-    var output = upto();
-    var dup = throughout(tr, output);
-    
-    tr.on('data', function () {});
-    tr.on('end', function () {
-        if (!active && stack.length === 0) output.to(-1);
-    });
-    
-    var streams = Object.keys(streamMap).reduce(function (acc, key) {
-        var sm = streamMap[key];
-        if (sm && typeof sm === 'object') {
-            var stream = sm.pipe(through());
-            acc[key] = stream.pause();
-        }
-        if (typeof sm === 'function') {
-        }
-        if (!sm || typeof sm !== 'object' && typeof sm !== 'function') {
-            var stream = through();
-            acc[key] = stream.pause();
-            var s = String(sm);
-            if (s.length) stream.queue(s);
-            stream.queue(null);
-        }
-        return acc;
-    }, {});
-    
-    var active = false;
-    var stack = [];
-    
-    Object.keys(streamMap).forEach(function (key) {
-        tr.select(key, function (node) {
-            if (typeof streamMap[key] === 'function') {
-                node.update(streamMap[key]);
-            }
-            else {
-                onupdate(tr.parser.position);
-            }
-        });
-        
-        function onupdate (pos) {
-            if (active) return stack.push(function () { onupdate(pos) });
-            
-            streams[key].pipe(through(
-                function (buf) {
-                    if (buf.length) output.queue(buf)
-                },
-                function () {
-                    active = false;
-                    if (stack.length) {
-                        stack.shift()()
-                    }
-                    else output.to(-1)
-                }
-            ));
-            active = true;
-            
-            output.to(pos);
-            process.nextTick(function () {
-                streams[key].resume();
-            });
-        }
-    });
-    
-    dup.select = tr.select.bind(tr);
-    dup.update = tr.update.bind(tr);
-    dup.remove = tr.remove.bind(tr);
-    dup.replace = tr.replace.bind(tr);
-    
-    return dup;
-};
-
-})(require("__browserify_process"))
-},{"./lib/upto":17,"trumpet":18,"throughout":19,"through":6,"__browserify_process":10}],15:[function(require,module,exports){
+},{"__browserify_process":10}],15:[function(require,module,exports){
 var EventEmitter = require('events').EventEmitter
 var backoff = require('backoff')
 
@@ -5179,7 +5095,91 @@ function (createConnection) {
 
 }
 
-},{"events":14,"./widget":20,"backoff":21}],8:[function(require,module,exports){
+},{"events":14,"./widget":17,"backoff":18}],7:[function(require,module,exports){
+(function(process){var trumpet = require('trumpet');
+var through = require('through');
+var throughout = require('throughout');
+
+var upto = require('./lib/upto');
+
+module.exports = function (streamMap) {
+    if (!streamMap) streamMap = {};
+    
+    var tr = trumpet();
+    
+    var output = upto();
+    var dup = throughout(tr, output);
+    
+    tr.on('data', function () {});
+    tr.on('end', function () {
+        if (!active && stack.length === 0) output.to(-1);
+    });
+    
+    var streams = Object.keys(streamMap).reduce(function (acc, key) {
+        var sm = streamMap[key];
+        if (sm && typeof sm === 'object') {
+            var stream = sm.pipe(through());
+            acc[key] = stream.pause();
+        }
+        if (typeof sm === 'function') {
+        }
+        if (!sm || typeof sm !== 'object' && typeof sm !== 'function') {
+            var stream = through();
+            acc[key] = stream.pause();
+            var s = String(sm);
+            if (s.length) stream.queue(s);
+            stream.queue(null);
+        }
+        return acc;
+    }, {});
+    
+    var active = false;
+    var stack = [];
+    
+    Object.keys(streamMap).forEach(function (key) {
+        tr.select(key, function (node) {
+            if (typeof streamMap[key] === 'function') {
+                node.update(streamMap[key]);
+            }
+            else {
+                onupdate(tr.parser.position);
+            }
+        });
+        
+        function onupdate (pos) {
+            if (active) return stack.push(function () { onupdate(pos) });
+            
+            streams[key].pipe(through(
+                function (buf) {
+                    if (buf.length) output.queue(buf)
+                },
+                function () {
+                    active = false;
+                    if (stack.length) {
+                        stack.shift()()
+                    }
+                    else output.to(-1)
+                }
+            ));
+            active = true;
+            
+            output.to(pos);
+            process.nextTick(function () {
+                streams[key].resume();
+            });
+        }
+    });
+    
+    dup.select = tr.select.bind(tr);
+    dup.update = tr.update.bind(tr);
+    dup.remove = tr.remove.bind(tr);
+    dup.replace = tr.replace.bind(tr);
+    
+    return dup;
+};
+
+})(require("__browserify_process"))
+},{"./lib/upto":19,"trumpet":20,"throughout":21,"through":6,"__browserify_process":10}],8:[function(require,module,exports){
 'use strict';
 
 var through = require('through')
@@ -5664,7 +5664,205 @@ module.exports = function (uri, cb) {
     return stream;
 };
 
-},{"stream":11,"sockjs-client":25}],25:[function(require,module,exports){
+},{"stream":11,"sockjs-client":25}],18:[function(require,module,exports){
+/*
+ * Copyright (c) 2012 Mathieu Turcotte
+ * Licensed under the MIT license.
+ */
+
+var Backoff = require('./lib/backoff'),
+    FibonacciBackoffStrategy = require('./lib/strategy/fibonacci'),
+    ExponentialBackoffStrategy = require('./lib/strategy/exponential');
+
+module.exports.Backoff = Backoff;
+module.exports.FibonacciStrategy = FibonacciBackoffStrategy;
+module.exports.ExponentialStrategy = ExponentialBackoffStrategy;
+
+/**
+ * Constructs a Fibonacci backoff.
+ * @param options Fibonacci backoff strategy arguments.
+ * @see FibonacciBackoffStrategy
+ */
+module.exports.fibonacci = function(options) {
+    return new Backoff(new FibonacciBackoffStrategy(options));
+};
+
+/**
+ * Constructs an exponential backoff.
+ * @param options Exponential strategy arguments.
+ * @see ExponentialBackoffStrategy
+ */
+module.exports.exponential = function(options) {
+    return new Backoff(new ExponentialBackoffStrategy(options));
+};
+
+
+},{"./lib/backoff":26,"./lib/strategy/fibonacci":27,"./lib/strategy/exponential":28}],17:[function(require,module,exports){
+
+var h = require('hyperscript')
+var o = require('observable')
+//TODO make this just a small square that goes red/orange/green
+
+module.exports = function (emitter) {
+  var color = o(), count = o()
+  color('red'); count(' ')
+
+  var el = h('div', {
+    style: {
+      background: color,
+      width: '1em', height: '1em',
+      display: 'inline-block',
+      'text-align': 'center',
+      border: '1px solid black'
+    }, 
+    onclick: function () {
+      emitter.connected 
+        ? emitter.disconnect()
+        : emitter.connect()
+    }
+  },
+  count
+  )
+  var int
+  emitter.on('reconnect', function (n, d) {
+    var delay = Math.round(d / 1000) + 1
+    count(delay)
+    color('red')
+    clearInterval(int)
+    int = setInterval(function () {
+      count(delay > 0 ? --delay : 0)
+      color(delay ? 'red' :'orange')      
+    }, 1e3)
+  })
+  emitter.on('connect',   function () {
+    count(' ')
+    color('green')
+    clearInterval(int)
+  })
+  emitter.on('disconnect', function () {
+    //count('  ')
+    color('red')
+  })
+  return el
+}
+
+},{"hyperscript":29,"observable":30}],20:[function(require,module,exports){
+var sax = require('sax');
+var select = require('./lib/select');
+
+module.exports = function (opts) {
+    if (!opts) opts = {};
+    if (!opts.special) {
+        opts.special = [
+            'area', 'base', 'basefont', 'br', 'col',
+            'hr', 'input', 'img', 'link', 'meta'
+        ];
+    }
+    opts.special = opts.special.map(function (x) { return x.toUpperCase() });
+    
+    var parser = sax.parser(false);
+    var stream = select(parser, opts, write, end);
+    
+    function write (buf) {
+        var s = buf.toString();
+        buffered += s;
+        parser.write(buf.toString());
+    }
+    
+    function end () {
+        if (pos < parser.position) {
+            var s = buffered.slice(0, parser.position - pos);
+            stream.raw(s);
+        }
+        stream.queue(null);
+    }
+    
+    parser.onerror = function (err) {
+        stream.emit("error", err)
+    }
+    
+    var buffered = '';
+    var pos = 0;
+    var inScript = false;
+    var scriptLen = 0;
+    var scriptStart = 0;
+    
+    var update = function (type, tag) {
+        var len, src;
+        if (type === 'script') {
+            src = tag;
+            len = tag.length;
+            scriptLen += len;
+            inScript = true;
+        }
+        else if (type === 'text') {
+            len = parser.startTagPosition - pos - 1;
+        }
+        else if (type === 'open' && tag && tag.name === 'SCRIPT'
+        && tag.attributes.src) {
+            len = 0;
+        }
+        else if (inScript) {
+            len = parser.position - scriptLen - parser.startTagPosition + 1;
+            scriptLen = 0;
+            inScript = false;
+        }
+        else if (type === 'special') {
+            len = 0;
+        }
+        else {
+            len = parser.position - parser.startTagPosition + 1;
+        }
+        
+        if (type === 'open' && tag && tag.name === 'SCRIPT') {
+            scriptLen = len;
+        }
+        
+        pos = parser.position;
+        
+        src = src || buffered.slice(0, len);
+        buffered = buffered.slice(len);
+        
+        stream.raw(src);
+        return src;
+    };
+    
+    var lastOpen;
+    parser.onopentag = function (tag) {
+        lastOpen = tag.name;
+        
+        stream.pre('open', tag);
+        update('open', tag);
+        stream.post('open', tag);
+        if (opts.special.indexOf(tag.name) >= 0) {
+            stream.pre('close', tag.name);
+            update('special');
+            stream.post('close', tag.name);
+        }
+    };
+    
+    parser.onclosetag = function (name) {
+        stream.pre('close', name);
+        update('close');
+        stream.post('close', name);
+    };
+    
+    parser.ontext = function (text) {
+        stream.pre('text', text);
+        update('text');
+        stream.post('text', text);
+    };
+    
+    parser.onscript = function (src) {
+        stream.pre('script', src);
+        update('script', src);
+        stream.post('script', src);
+    };
+    
+    return stream;
+};
+
+},{"./lib/select":31,"sax":32}],25:[function(require,module,exports){
 (function(){/* SockJS client, version 0.3.1.7.ga67f.dirty, http://sockjs.org, MIT License
 
 Copyright (c) 2011-2012 VMware, Inc.
@@ -7990,205 +8188,7 @@ if (typeof module === 'object' && module && module.exports) {
 
 
 })()
-},{}],21:[function(require,module,exports){
-/*
- * Copyright (c) 2012 Mathieu Turcotte
- * Licensed under the MIT license.
- */
-
-var Backoff = require('./lib/backoff'),
-    FibonacciBackoffStrategy = require('./lib/strategy/fibonacci'),
-    ExponentialBackoffStrategy = require('./lib/strategy/exponential');
-
-module.exports.Backoff = Backoff;
-module.exports.FibonacciStrategy = FibonacciBackoffStrategy;
-module.exports.ExponentialStrategy = ExponentialBackoffStrategy;
-
-/**
- * Constructs a Fibonacci backoff.
- * @param options Fibonacci backoff strategy arguments.
- * @see FibonacciBackoffStrategy
- */
-module.exports.fibonacci = function(options) {
-    return new Backoff(new FibonacciBackoffStrategy(options));
-};
-
-/**
- * Constructs an exponential backoff.
- * @param options Exponential strategy arguments.
- * @see ExponentialBackoffStrategy
- */
-module.exports.exponential = function(options) {
-    return new Backoff(new ExponentialBackoffStrategy(options));
-};
-
-
-},{"./lib/backoff":26,"./lib/strategy/fibonacci":27,"./lib/strategy/exponential":28}],20:[function(require,module,exports){
-
-var h = require('hyperscript')
-var o = require('observable')
-//TODO make this just a small square that goes red/orange/green
-
-module.exports = function (emitter) {
-  var color = o(), count = o()
-  color('red'); count(' ')
-
-  var el = h('div', {
-    style: {
-      background: color,
-      width: '1em', height: '1em',
-      display: 'inline-block',
-      'text-align': 'center',
-      border: '1px solid black'
-    }, 
-    onclick: function () {
-      emitter.connected 
-        ? emitter.disconnect()
-        : emitter.connect()
-    }
-  },
-  count
-  )
-  var int
-  emitter.on('reconnect', function (n, d) {
-    var delay = Math.round(d / 1000) + 1
-    count(delay)
-    color('red')
-    clearInterval(int)
-    int = setInterval(function () {
-      count(delay > 0 ? --delay : 0)
-      color(delay ? 'red' :'orange')      
-    }, 1e3)
-  })
-  emitter.on('connect',   function () {
-    count(' ')
-    color('green')
-    clearInterval(int)
-  })
-  emitter.on('disconnect', function () {
-    //count('  ')
-    color('red')
-  })
-  return el
-}
-
-},{"hyperscript":29,"observable":30}],18:[function(require,module,exports){
-var sax = require('sax');
-var select = require('./lib/select');
-
-module.exports = function (opts) {
-    if (!opts) opts = {};
-    if (!opts.special) {
-        opts.special = [
-            'area', 'base', 'basefont', 'br', 'col',
-            'hr', 'input', 'img', 'link', 'meta'
-        ];
-    }
-    opts.special = opts.special.map(function (x) { return x.toUpperCase() });
-    
-    var parser = sax.parser(false);
-    var stream = select(parser, opts, write, end);
-    
-    function write (buf) {
-        var s = buf.toString();
-        buffered += s;
-        parser.write(buf.toString());
-    }
-    
-    function end () {
-        if (pos < parser.position) {
-            var s = buffered.slice(0, parser.position - pos);
-            stream.raw(s);
-        }
-        stream.queue(null);
-    }
-    
-    parser.onerror = function (err) {
-        stream.emit("error", err)
-    }
-    
-    var buffered = '';
-    var pos = 0;
-    var inScript = false;
-    var scriptLen = 0;
-    var scriptStart = 0;
-    
-    var update = function (type, tag) {
-        var len, src;
-        if (type === 'script') {
-            src = tag;
-            len = tag.length;
-            scriptLen += len;
-            inScript = true;
-        }
-        else if (type === 'text') {
-            len = parser.startTagPosition - pos - 1;
-        }
-        else if (type === 'open' && tag && tag.name === 'SCRIPT'
-        && tag.attributes.src) {
-            len = 0;
-        }
-        else if (inScript) {
-            len = parser.position - scriptLen - parser.startTagPosition + 1;
-            scriptLen = 0;
-            inScript = false;
-        }
-        else if (type === 'special') {
-            len = 0;
-        }
-        else {
-            len = parser.position - parser.startTagPosition + 1;
-        }
-        
-        if (type === 'open' && tag && tag.name === 'SCRIPT') {
-            scriptLen = len;
-        }
-        
-        pos = parser.position;
-        
-        src = src || buffered.slice(0, len);
-        buffered = buffered.slice(len);
-        
-        stream.raw(src);
-        return src;
-    };
-    
-    var lastOpen;
-    parser.onopentag = function (tag) {
-        lastOpen = tag.name;
-        
-        stream.pre('open', tag);
-        update('open', tag);
-        stream.post('open', tag);
-        if (opts.special.indexOf(tag.name) >= 0) {
-            stream.pre('close', tag.name);
-            update('special');
-            stream.post('close', tag.name);
-        }
-    };
-    
-    parser.onclosetag = function (name) {
-        stream.pre('close', name);
-        update('close');
-        stream.post('close', name);
-    };
-    
-    parser.ontext = function (text) {
-        stream.pre('text', text);
-        update('text');
-        stream.post('text', text);
-    };
-    
-    parser.onscript = function (src) {
-        stream.pre('script', src);
-        update('script', src);
-        stream.post('script', src);
-    };
-    
-    return stream;
-};
-
-},{"./lib/select":31,"sax":32}],5:[function(require,module,exports){
+},{}],5:[function(require,module,exports){
 "use strict"
 
 var through = require('through')
@@ -9518,7 +9518,7 @@ function write (chunk) {
 })(typeof exports === "undefined" ? sax = {} : exports)
 
 })()
-},{"stream":11}],17:[function(require,module,exports){
+},{"stream":11}],19:[function(require,module,exports){
 var through = require('through');
 
 module.exports = function () {
@@ -9582,7 +9582,26 @@ module.exports = function () {
     }
 };
 
-},{"through":6}],33:[function(require,module,exports){
+},{"through":6}],21:[function(require,module,exports){
+var duplexer = require('duplexer');
+var through = require('through');
+
+module.exports = function (a, b) {
+    a.pipe(through(
+        function (buf) { b.write(buf) },
+        function () { b.end() }
+    ));
+    var dup = duplexer(a, b);
+    dup.on('pause', function () {
+        b.pause();
+    });
+    dup.on('resume', function () {
+        b.resume();
+    });
+    return dup;
+};
+
+},{"duplexer":33,"through":6}],33:[function(require,module,exports){
 var Stream = require("stream")
     , writeMethods = ["write", "end", "destroy"]
     , readMethods = ["resume", "pause"]
@@ -9661,26 +9680,7 @@ function duplex(writer, reader) {
     }
 }
 
-},{"stream":11}],19:[function(require,module,exports){
-var duplexer = require('duplexer');
-var through = require('through');
-
-module.exports = function (a, b) {
-    a.pipe(through(
-        function (buf) { b.write(buf) },
-        function () { b.end() }
-    ));
-    var dup = duplexer(a, b);
-    dup.on('pause', function () {
-        b.pause();
-    });
-    dup.on('resume', function () {
-        b.resume();
-    });
-    return dup;
-};
-
-},{"duplexer":33,"through":6}],27:[function(require,module,exports){
+},{"stream":11}],27:[function(require,module,exports){
 /*
  * Copyright (c) 2012 Mathieu Turcotte
  * Licensed under the MIT license.

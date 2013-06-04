@@ -18,18 +18,22 @@ module.exports = function(heading) {
     var item = document.createElement('span')
     item.innerHTML = msg
     el.querySelector('.messages').appendChild(item)
+    if (stream.visible) {
+      el.querySelector('.messages').scrollTop = el.querySelector('.messages').scrollHeight
+    }
     this.push(msg)
   })
 
   stream.hide = function() {
     el.classList.remove('visible')
     setTimeout(function() {
-      el.style.display = 'none'
+      stream.emit('hide')
     }, 300)
     this.visible = false
   }
 
   stream.show = function() {
+    this.emit('show')
     el.style.display = 'block'
     el.classList.add('visible')
     this.visible = true

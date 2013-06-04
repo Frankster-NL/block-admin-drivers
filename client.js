@@ -38,12 +38,19 @@ shoe(function(stream) {
     var url = el.getAttribute('data-url')
     var logs = mx.createStream({command: 'install', url: url})
 
-    if (el.logConsole) {
+    if (el.logConsole && document.body.contains(el.logConsole.el)) {
       document.body.removeChild(el.logConsole.el)
     }
 
     el.logConsole = LogConsole('Installing ' + el.getAttribute('data-name'))
-    document.body.appendChild(el.logConsole.el)
+
+    el.logConsole.on('hide', function() {
+      document.body.removeChild(el.logConsole.el)
+    })
+    el.logConsole.on('show', function() {
+      document.body.appendChild(el.logConsole.el)
+    })
+
     el.setAttribute('data-action', 'showlog')
     el.innerText = "Connecting..."
     logs.on('data', function() {el.innerText = "Installing..."})
@@ -59,11 +66,18 @@ shoe(function(stream) {
   commands.uninstall = function(el, url) {
     var url = el.getAttribute('data-name')
     var logs = mx.createStream({command: 'uninstall', url: url})
-    if (el.logConsole) {
+
+    if (el.logConsole && document.body.contains(el.logConsole.el)) {
       document.body.removeChild(el.logConsole.el)
     }
     el.logConsole = LogConsole('Uninstalling ' +  url)
-    document.body.appendChild(el.logConsole.el)
+    el.logConsole.on('hide', function() {
+      document.body.removeChild(el.logConsole.el)
+    })
+    el.logConsole.on('show', function() {
+      document.body.appendChild(el.logConsole.el)
+    })
+
     el.innerText = "Connecting..."
     logs.on('data', function() {
       el.innerText = "Uninstalling..."
