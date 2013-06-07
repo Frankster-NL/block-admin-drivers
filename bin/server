@@ -19,7 +19,7 @@ var from = require('from')
 var fs = require('fs')
 var read = fs.createReadStream
 
-var DRIVERS_URL = 'http://wiki.ninjablocks.com/drivers.json'
+var DRIVERS_URL = 'http://wiki-cdn.ninjablocks.com/drivers.json'
 
 program
 .version(require('../package.json').version)
