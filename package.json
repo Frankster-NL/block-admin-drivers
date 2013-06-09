@@ -22,7 +22,7 @@
     "msgpack-browserify": "0.0.0",
     "ansi-html-stream": "0.0.2",
     "commander": "~1.1.1",
-    "ninja-toolbelt": "~0.2.12",
+    "ninja-toolbelt": "git://github.com/ninjablocks/ninja-toolbelt.git#master",
     "reconnect": "~1.3.1",
     "browserify": "~2.14.2",
     "brfs": "0.0.5",
@@ -33,7 +33,7 @@
     "from": "~0.1.3",
     "concat-stream": "~1.0.0",
     "passwd": "0.0.11",
-    "http-auth":"1.2.7"
+    "http-auth": "1.2.7"
   },
   "devDependencies": {
     "browserify": "~2.14.1"

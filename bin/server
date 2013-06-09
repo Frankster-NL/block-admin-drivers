@@ -31,7 +31,7 @@ program
 .parse(process.argv)
 
 var NINJA_CMD = path.normalize(__dirname + '/../node_modules/ninja-toolbelt/bin/ninja')
-var toolbelt = require('ninja-toolbelt')(program.driverPath)
+var drivers = require('ninja-toolbelt/lib/drivers')
 
 if (program.verbose) process.env.DEBUG = '*'
 var log = require('debug')('driver-admin')
@@ -60,6 +60,7 @@ var app = http.createServer(function(req, res) {
   function handleRequest() {
     if (req.url === '/') {
       getDrivers(function(err, drivers) {
+        if (err) log(err)
         var driverStream = drivers.pipe(driverRender())
 
         read(__dirname + '/../public/index.html')
@@ -185,8 +186,8 @@ function getDrivers(fn) {
     updateDriversCache()
     return app.once('cache-updated', getDrivers.bind(null, fn))
   }
-  toolbelt.getInstalledDrivers(function(err, installedDrivers) {
-    if (err) return fn(err)
+  drivers.list(program.driverPath, function(err, installedDrivers) {
+    if (err) log(err)
     fn(null, from(cachedDrivers)
     .pipe(getStatus(installedDrivers)))
   })
