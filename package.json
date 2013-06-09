@@ -26,7 +26,7 @@
     "reconnect": "~1.3.1",
     "browserify": "~2.14.2",
     "brfs": "0.0.5",
-    "hyperstream": "git://github.com/timoxley/hyperstream.git",
+    "hyperstream": "~0.2.0",
     "hyperspace": "~0.1.1",
     "map-stream": "0.0.2",
     "JSONStream": "~0.6.4",
