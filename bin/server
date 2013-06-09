@@ -24,7 +24,7 @@ var DRIVERS_URL = 'http://wiki-cdn.ninjablocks.com/drivers.json'
 program
 .version(require('../package.json').version)
 .option('-p, --port [port]', 'port to listen on [port]', 9099)
-.option('-d, --driver-path [path]', 'path to drivers', process.cwd())
+.option('-d, --driver-path [path]', 'path to drivers', process.cwd() + '/drivers')
 .option('--auth [file]', 'path to user authentication file', process.cwd() + '/users.htpasswd')
 .option('--pid [file]', 'file containing pid of ninja client', '')
 .option('-v, --verbose', 'verbose output')
