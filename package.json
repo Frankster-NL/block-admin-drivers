@@ -6,9 +6,15 @@
   "scripts": {
     "prepublish": "`npm bin`/browserify -t brfs client.js > public/build.js"
   },
-  "repository": "",
-  "author": "",
-  "license": "BSD",
+  "bin": {
+    "block-admin-drivers": "bin/server"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/ninjablocks/block-admin-drivers.git"
+  },
+  "author": "Tim Oxley",
+  "license": "MIT",
   "dependencies": {
     "shoe": "0.0.10",
     "ecstatic": "~0.4.2",
@@ -37,5 +43,10 @@
   },
   "devDependencies": {
     "browserify": "~2.14.1"
+  },
+  "gitHead": "9da9b7ecf788c1eca68e81e742cdb8f48dae1015",
+  "readmeFilename": "Readme.md",
+  "bugs": {
+    "url": "https://github.com/ninjablocks/block-admin-drivers/issues"
   }
 }
