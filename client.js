@@ -6,7 +6,7 @@ var shoe = require('reconnect/shoe')
 var fs = require('fs');
 var Debug = require('debug/debug.js')
 window.debug = Debug
-var debug = Debug('driver-install')
+var debug = Debug('driver-admin')
 var LogConsole = require('./console/index')
 var hyperstream = require('hyperstream')
 var concat = require('concat-stream')
@@ -105,15 +105,14 @@ shoe(function(stream) {
   triggers.forEach(function(trigger) {
     trigger.addEventListener('click', handleAction())
   })
-  
 }).connect('/driver-admin')
 .on('connect', function() {
-  debug('connected')
+  Debug('connection')('connected')
 }).on('disconnect', function(err) {
   var message = err || ''
   if (err && err.message) message = err.message
-  debug('disconnected', message)
+  Debug('connection')('disconnected', message)
 }).on('reconnect', function(attempts, timeout) {
   attempts++
-  debug('attempting reconnection %d after %dms', attempts, timeout)
+  Debug('connection')('attempting reconnection %d after %dms', attempts, timeout)
 })
