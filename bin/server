@@ -20,6 +20,7 @@ var fs = require('fs')
 var read = fs.createReadStream
 
 var DRIVERS_URL = 'http://wiki-cdn.ninjablocks.com/drivers.json'
+process.title = 'block-admin-drivers'
 
 program
 .version(require('../package.json').version)
