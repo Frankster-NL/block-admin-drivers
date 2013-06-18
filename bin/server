@@ -31,10 +31,15 @@ program
 .parse(process.argv)
 
 var NINJA_CMD = path.normalize(__dirname + '/../node_modules/ninja-toolbelt/bin/ninja')
-var drivers = require('ninja-toolbelt/lib/drivers')
+var NAME = require('../package.json').name
+if (!process.env.DEBUG) {
+  process.env.DEBUG = NAME
+  if (program.verbose) process.env.DEBUG = NAME + ' *'
+}
 
-if (program.verbose) process.env.DEBUG = '*'
-var log = require('debug')('driver-admin')
+var log = require('debug')(NAME)
+
+var drivers = require('ninja-toolbelt/lib/drivers')
 
 var docs = {}
 var driversHtml = fs.readFileSync(__dirname + '/../public/drivers.html')
@@ -164,6 +169,7 @@ function updateDriversCache() {
     updateDriversCache.updating = false
     updateDriversCache.last = Date.now()
     cachedDrivers = result
+    log('cache updated')
     app.emit('cache-updated')
   }))
 }
