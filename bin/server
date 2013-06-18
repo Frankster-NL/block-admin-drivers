@@ -30,7 +30,6 @@ program
 .option('-v, --verbose', 'verbose output')
 .parse(process.argv)
 
-var NINJA_CMD = path.normalize(__dirname + '/../node_modules/ninja-toolbelt/bin/ninja')
 var NAME = require('../package.json').name
 if (!process.env.DEBUG) {
   process.env.DEBUG = NAME
@@ -39,6 +38,7 @@ if (!process.env.DEBUG) {
 
 var log = require('debug')(NAME)
 
+var NINJA_CMD = '`npm bin`/ninja'
 var drivers = require('ninja-toolbelt/lib/drivers')
 
 var docs = {}
