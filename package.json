@@ -28,7 +28,7 @@
     "msgpack-browserify": "0.0.0",
     "ansi-html-stream": "0.0.2",
     "commander": "~1.1.1",
-    "ninja-toolbelt": "ninjablocks/ninja-toolbelt",
+    "ninja-toolbelt": "git://github.com/ninjablocks/ninja-toolbelt",
     "reconnect": "~1.3.1",
     "browserify": "~2.14.2",
     "brfs": "0.0.5",
