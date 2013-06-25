@@ -1,6 +1,6 @@
 {
   "name": "block-admin-drivers",
-  "version": "0.0.1",
+  "version": "0.0.3",
   "description": "Manage Ninja Block driver installations.",
   "main": "index.js",
   "scripts": {
