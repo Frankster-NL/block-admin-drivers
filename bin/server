@@ -39,7 +39,7 @@ if (!process.env.DEBUG) {
 
 var log = require('debug')(NAME)
 
-var NINJA_CMD = '`npm bin`/ninja'
+var NINJA_CMD = path.normalize(__dirname + '/../node_modules/.bin/ninja')
 var drivers = require('ninja-toolbelt/lib/drivers')
 
 var docs = {}
