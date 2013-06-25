@@ -4,7 +4,7 @@
   "description": "Manage Ninja Block driver installations.",
   "main": "index.js",
   "scripts": {
-    "prepublish": "`npm bin`/browserify -t brfs client.js > public/build.js"
+    "prepublish": "make -B"
   },
   "bin": {
     "block-admin-drivers": "bin/server"
@@ -37,7 +37,8 @@
     "from": "~0.1.3",
     "concat-stream": "~1.0.0",
     "passwd": "0.0.11",
-    "http-auth": "1.2.7"
+    "http-auth": "1.2.7",
+    "browserify": "~2.14.1"
   },
   "devDependencies": {
     "browserify": "~2.14.1"
