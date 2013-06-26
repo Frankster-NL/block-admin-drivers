@@ -4,7 +4,8 @@
   "description": "Manage Ninja Block driver installations.",
   "main": "index.js",
   "scripts": {
-    "prepublish": "make -B"
+    "prepublish": "make -B",
+    "start": "bin/server"
   },
   "bin": {
     "block-admin-drivers": "bin/server"
