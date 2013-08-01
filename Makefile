@@ -1,5 +1,5 @@
 public/build.js: client.js console/*
-	./node_modules/.bin/browserify -t brfs client.js > public/build.js
+	browserify -t brfs client.js > public/build.js
 
 release:
 	git diff --quiet && git diff --cached --quiet || (echo 'please stash or commit your changes.'; exit 1)

@@ -39,10 +39,10 @@
     "concat-stream": "~1.0.0",
     "passwd": "0.0.11",
     "http-auth": "1.2.7",
-    "browserify": "~2.14.1"
+    "browserify": "~2.25.1"
   },
   "devDependencies": {
-    "browserify": "~2.14.1"
+    "browserify": "~2.25.1"
   },
   "gitHead": "9da9b7ecf788c1eca68e81e742cdb8f48dae1015",
   "readmeFilename": "Readme.md",
