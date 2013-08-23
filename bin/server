@@ -28,6 +28,7 @@ program
 .option('-d, --driver-path [path]', 'path to drivers', process.cwd() + '/drivers')
 .option('--auth [file]', 'path to user authentication file', process.cwd() + '/users.htpasswd')
 .option('--pid [file]', 'file containing pid of ninja client', '')
+.option('--ninjacmd [cmd]', 'location of the ninja cli toolbelt', '')
 .option('-v, --verbose', 'verbose output')
 .parse(process.argv)
 
@@ -39,7 +40,7 @@ if (!process.env.DEBUG) {
 
 var log = require('debug')(NAME)
 
-var NINJA_CMD = 'ninja'
+var NINJA_CMD = program.ninjacmd + 'ninja'
 var drivers = require('ninja-toolbelt/lib/drivers')
 
 var docs = {}
